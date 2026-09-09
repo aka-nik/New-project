@@ -30,6 +30,8 @@ Relationship checks:
 
 Run the quality scan across all nine source tables and write a structured report:
 
+Key whitespace violations are also counted and preserved in quarantine flags instead of
+being silently normalized.
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\check_quality.py .\data\source --output .\quality-report.json
 ```

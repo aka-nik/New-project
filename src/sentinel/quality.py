@@ -63,6 +63,11 @@ def evaluate_csv(
         keys: list[tuple[str, ...]] = []
         rows: list[dict[str, str | None]] = []
         missing_values: dict[str, int] = {}
+        whitespace_values: dict[str, int] = {}
+        identifier_columns = {
+            column for column in fieldnames if column.endswith("_id")
+        }
+        identifier_columns.update(key_columns)
 
         for row in reader:
             row_count += 1
@@ -79,6 +84,10 @@ def evaluate_csv(
                 value = row.get(column, "")
                 if value is None or str(value).strip() == "":
                     missing_values[column] = missing_values.get(column, 0) + 1
+            for column in identifier_columns:
+                value = row.get(column, "")
+                if value is not None and str(value) != str(value).strip():
+                    whitespace_values[column] = whitespace_values.get(column, 0) + 1
 
     duplicate_count = (
         max(0, row_count - len({value for value in keys if all(value)}))
@@ -97,6 +106,7 @@ def evaluate_csv(
         "fail"
         if duplicate_count
         or any(count > 0 for count in missing_values.values())
+        or any(count > 0 for count in whitespace_values.values())
         or schema_drift
         else "pass"
     )
@@ -120,11 +130,19 @@ def evaluate_csv(
             missing_columns = [
                 column
                 for column in fieldnames
-                if column != key_column
+                if column not in key_columns
                 and (row.get(column) is None or str(row.get(column)).strip() == "")
             ]
             if missing_columns:
                 flags.append(f"missing_values:{','.join(missing_columns)}")
+            whitespace_columns = [
+                column
+                for column in identifier_columns
+                if row.get(column) is not None
+                and str(row.get(column)) != str(row.get(column)).strip()
+            ]
+            if whitespace_columns:
+                flags.append(f"whitespace:{','.join(whitespace_columns)}")
             if flags:
                 quarantine_rows.append({**row, "_dq_flags": ";".join(flags)})
 
@@ -144,6 +162,7 @@ def evaluate_csv(
         "row_count": row_count,
         "duplicate_count": duplicate_count,
         "missing_values": missing_values,
+        "whitespace_values": whitespace_values,
         "status": status,
         "quarantined_count": quarantined_count,
     }

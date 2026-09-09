@@ -74,3 +74,19 @@ def test_evaluate_csv_supports_composite_keys(tmp_path):
 
     assert report["duplicate_count"] == 1
     assert report["status"] == "fail"
+
+
+def test_evaluate_csv_detects_key_whitespace_and_quarantines_it(tmp_path):
+    path = tmp_path / "orders.csv"
+    quarantine_path = tmp_path / "quarantine.csv"
+    path.write_text(
+        "order_id,customer_id\n ord-001,cus-001\nord-002, cus-002 \n",
+        encoding="utf-8",
+    )
+
+    report = evaluate_csv(path, "order_id", quarantine_path)
+
+    assert report["whitespace_values"] == {"order_id": 1, "customer_id": 1}
+    assert report["status"] == "fail"
+    rows = list(csv.DictReader(quarantine_path.open(encoding="utf-8", newline="")))
+    assert rows[0]["_dq_flags"] == "whitespace:order_id"

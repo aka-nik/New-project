@@ -168,6 +168,12 @@ def main() -> None:
         print(f"{table_name}: {report['row_count']:,} rows ({report['status']})")
         print(f"  duplicate {key_label}: {report['duplicate_count']:,}")
         print(f"  missing values: {missing_summary}")
+        whitespace_summary = ", ".join(
+            f"{column}={count:,}"
+            for column, count in report.get("whitespace_values", {}).items()
+            if count
+        ) or "none"
+        print(f"  key whitespace: {whitespace_summary}")
         for relationship, orphan_count in report.get("relationship_orphans", {}).items():
             print(f"  {relationship}: {orphan_count:,} orphan rows")
 
