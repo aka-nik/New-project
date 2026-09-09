@@ -37,6 +37,10 @@ variants; the report identifies candidate groups without auto-changing source va
 .\.venv\Scripts\python.exe .\scripts\check_quality.py .\data\source --output .\quality-report.json
 ```
 
+The JSON report contains a run summary with evaluated, passed, failed, and missing
+table counts plus a pass-rate percentage. Missing source tables are excluded from
+the pass-rate denominator.
+
 The report uses composite keys for order items and payments, and treats the
 geolocation reference data as keyless because its source contract declares no
 unique row identity. It also validates the expected columns and configured

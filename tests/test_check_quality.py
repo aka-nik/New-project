@@ -1,6 +1,10 @@
 import csv
 
-from scripts.check_quality import build_quality_report, check_csv
+from scripts.check_quality import (
+    build_quality_report,
+    check_csv,
+    summarize_quality_report,
+)
 
 
 def test_check_csv_counts_duplicate_keys_and_missing_values(tmp_path):
@@ -35,3 +39,20 @@ def test_build_quality_report_covers_all_source_tables(tmp_path):
     assert reports["orders"]["status"] == "pass"
     assert reports["payments"]["status"] == "missing"
     assert reports["geolocation"]["duplicate_count"] == 0
+
+
+def test_summarize_quality_report_excludes_missing_tables_from_pass_rate():
+    reports = {
+        "orders": {"status": "pass"},
+        "products": {"status": "fail"},
+        "payments": {"status": "missing"},
+    }
+
+    assert summarize_quality_report(reports) == {
+        "total_tables": 3,
+        "evaluated_tables": 2,
+        "passed_tables": 1,
+        "failed_tables": 1,
+        "missing_tables": 1,
+        "pass_rate_pct": 50.0,
+    }

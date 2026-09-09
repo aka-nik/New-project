@@ -148,6 +148,32 @@ def build_quality_report(source_dir: Path) -> dict[str, dict[str, object]]:
     )
 
 
+def summarize_quality_report(
+    reports: dict[str, dict[str, object]],
+) -> dict[str, int | float]:
+    """Summarize table statuses as a deterministic run-level quality score."""
+    total_tables = len(reports)
+    passed_tables = sum(report.get("status") == "pass" for report in reports.values())
+    failed_tables = sum(report.get("status") == "fail" for report in reports.values())
+    missing_tables = sum(
+        report.get("status") == "missing" for report in reports.values()
+    )
+    evaluated_tables = total_tables - missing_tables
+    pass_rate = (
+        round(passed_tables / evaluated_tables * 100, 2)
+        if evaluated_tables
+        else 0.0
+    )
+    return {
+        "total_tables": total_tables,
+        "evaluated_tables": evaluated_tables,
+        "passed_tables": passed_tables,
+        "failed_tables": failed_tables,
+        "missing_tables": missing_tables,
+        "pass_rate_pct": pass_rate,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source_dir", type=Path)
@@ -159,6 +185,14 @@ def main() -> None:
     arguments = parser.parse_args()
 
     reports = build_quality_report(arguments.source_dir)
+    summary = summarize_quality_report(reports)
+    print(
+        "quality summary: "
+        f"{summary['passed_tables']}/{summary['evaluated_tables']} passed "
+        f"({summary['pass_rate_pct']:.2f}%), "
+        f"{summary['failed_tables']} failed, "
+        f"{summary['missing_tables']} missing"
+    )
     for table_name, report in reports.items():
         key_column = TABLES[table_name][1]
         key_label = (
@@ -188,7 +222,8 @@ def main() -> None:
 
     if arguments.output is not None:
         arguments.output.parent.mkdir(parents=True, exist_ok=True)
-        arguments.output.write_text(json.dumps(reports, indent=2), encoding="utf-8")
+        payload = {"summary": summary, "tables": reports}
+        arguments.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":
