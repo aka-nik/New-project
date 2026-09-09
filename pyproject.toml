@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-etl"
+version = "0.1.0"
+description = "A local, interview-ready e-commerce data quality pipeline"
+requires-python = ">=3.10,<3.12"
+dependencies = [
+  "pandas>=2.2,<3",
+  "pyarrow>=16,<18",
+  "openpyxl>=3.1,<4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

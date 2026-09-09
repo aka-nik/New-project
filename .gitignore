@@ -1,0 +1,16 @@
+# Local source data can be downloaded again and should not be committed.
+data/raw/
+data/source/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+.venv/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local environment secrets
+.env

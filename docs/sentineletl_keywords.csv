@@ -1,0 +1,66 @@
+Section,Keyword,Definition
+Already used,*ETL,"Extract, Transform, Load. The general pattern of moving data from sources into a useful destination."
+Already used,*Pipeline,A sequence of data-processing steps that runs in a defined order.
+Already used,*Raw data,The original source preserved without cleaning or modification.
+Already used,*Source data,"Data supplied by an external file, service, or system."
+Already used,*Schema,"The columns, names, types, and structural rules of a table."
+Already used,*Row count,The number of records in a table.
+Already used,*Primary key,"A column, or group of columns, that uniquely identifies a row."
+Already used,*Duplicate key,A repeated value where uniqueness was expected.
+Already used,*Missing value,An empty or unavailable field.
+Already used,*Referential integrity,The rule that a reference in one table must point to an existing record in another table.
+Already used,*Orphan row,A row whose referenced key does not exist in the related table.
+Already used,*Foreign key,A column that refers to a key in another table.
+Already used,*Grain,"What one row represents, such as one order or one order line."
+Already used,*One-to-many relationship,One record in one table relates to multiple records in another table.
+Already used,*Join,Combining tables through related columns.
+Already used,*Virtual environment,An isolated Python environment for one project.
+Already used,*Package,Reusable Python code organized for installation.
+Already used,*Unit test,An automated check of one small behavior.
+Already used,*Dependency,Software that a project needs in order to run.
+Already used,*`pyproject.toml`,"Python project configuration, including metadata and dependencies."
+Already used,*Editable install,A development installation that uses the current source files directly.
+Already used,*Version control,A system for recording file changes over time.
+Already used,*Git,The version-control tool used by this project.
+Already used,*GitHub,A service that can host Git repositories and collaboration workflows.
+Coming next,*Data quality check,A rule that tests whether data meets an expected condition.
+Coming next,*Deterministic check,A check that gives the same result for the same input.
+Coming next,*Profiling,"Summarizing a dataset's size, structure, and possible problems."
+Coming next,*Validation,Testing data or code against stated rules.
+Coming next,*Fixture,"Small, controlled data used by a test."
+Coming next,*Exception,A Python signal that something went wrong.
+Coming next,*Logging,Recording useful runtime events for diagnosis.
+Coming next,*Idempotency,Running the same pipeline input again does not create duplicate results.
+Coming next,*Watermark,A saved position showing how far an incremental pipeline has processed.
+Coming next,*Incremental load,Processing only new or changed data instead of everything again.
+Coming next,*Batch,A bounded group of data processed together.
+Coming next,*Bronze layer,"Raw, immutable data retained for traceability."
+Coming next,*Silver layer,"Cleaned, typed, deduplicated data."
+Coming next,*Gold layer,Business-ready data shaped for reporting and analysis.
+Coming next,*Medallion architecture,"The bronze, silver, and gold layering pattern."
+Coming next,*Data warehouse,A structured store optimized for analytical queries.
+Coming next,*Schema drift,An unexpected change in columns or data types.
+Coming next,*Data contract,"An agreed description of expected columns, keys, types, and relationships."
+Coming next,*Quarantine,Separating rows that fail quality rules for review.
+Coming next,*Orchestrator,A tool that schedules and coordinates pipeline tasks.
+Coming next,*DAG,Directed Acyclic Graph; a workflow whose tasks have ordered dependencies and no loops.
+Coming next,*Airflow,The orchestration tool planned for this project.
+Coming next,*Container,An isolated process with its own packaged software environment.
+Coming next,*Docker,A tool for building and running containers.
+Coming next,*Docker Compose,A configuration tool for running multiple related containers.
+Coming next,*Object storage,File storage organized by keys and folders rather than database tables.
+Coming next,*MinIO,The local S3-compatible object store planned for the bronze layer.
+Coming next,*Parquet,"A compressed, column-oriented data file format."
+Coming next,*dbt,"A tool for managing SQL transformations, tests, and documentation."
+Coming next,*Dimensional model,A reporting model built from fact and dimension tables.
+Coming next,*Fact table,A table containing measurable business events.
+Coming next,*Dimension table,A table describing the entities involved in those events.
+Coming next,*Star schema,A fact table connected directly to descriptive dimension tables.
+Coming next,*SCD Type 2,A method that preserves historical versions of changing dimension records.
+Coming next,*LLM,"Large Language Model; planned for interpreting quality findings, not replacing deterministic checks."
+Coming next,*Structured output,Machine-readable model output validated against a defined schema.
+Coming next,*Human-in-the-loop,A workflow where a person approves sensitive automated proposals.
+Coming next,*Evaluation set,Labeled examples used to measure a system's quality.
+Coming next,*Precision,The share of system-positive results that are correct.
+Coming next,*Recall,The share of all correct positives that the system found.
+Coming next,*CI,Continuous Integration; automated checks run when code changes.
