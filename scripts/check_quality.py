@@ -108,6 +108,11 @@ RELATIONSHIPS = [
     ("olist_order_payments_dataset.csv", "order_id", "olist_orders_dataset.csv", "order_id"),
 ]
 
+CATEGORICAL_COLUMNS = {
+    "products": ["product_category_name"],
+    "category_translation": ["product_category_name"],
+}
+
 
 def check_csv(path: Path, key_column: KeyColumns) -> tuple[int, int, dict[str, int]]:
     """Return row count, duplicate key count, and missing values by column."""
@@ -139,6 +144,7 @@ def build_quality_report(source_dir: Path) -> dict[str, dict[str, object]]:
         TABLES,
         expected_columns=EXPECTED_COLUMNS,
         relationships=RELATIONSHIPS,
+        categorical_columns=CATEGORICAL_COLUMNS,
     )
 
 
@@ -174,6 +180,9 @@ def main() -> None:
             if count
         ) or "none"
         print(f"  key whitespace: {whitespace_summary}")
+        for column, variants in report.get("category_variants", {}).items():
+            if variants:
+                print(f"  category variants in {column}: {len(variants):,} groups")
         for relationship, orphan_count in report.get("relationship_orphans", {}).items():
             print(f"  {relationship}: {orphan_count:,} orphan rows")
 

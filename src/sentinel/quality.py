@@ -48,6 +48,7 @@ def evaluate_csv(
     key_column: KeyColumns,
     quarantine_path: str | Path | None = None,
     expected_columns: Sequence[str] | None = None,
+    categorical_columns: Sequence[str] | None = None,
 ) -> dict[str, object]:
     """Return quality metrics for a CSV file and flag a failing run when issues are found."""
     path = Path(path)
@@ -64,6 +65,9 @@ def evaluate_csv(
         rows: list[dict[str, str | None]] = []
         missing_values: dict[str, int] = {}
         whitespace_values: dict[str, int] = {}
+        category_values: dict[str, dict[str, set[str]]] = {
+            column: {} for column in categorical_columns or []
+        }
         identifier_columns = {
             column for column in fieldnames if column.endswith("_id")
         }
@@ -88,6 +92,23 @@ def evaluate_csv(
                 value = row.get(column, "")
                 if value is not None and str(value) != str(value).strip():
                     whitespace_values[column] = whitespace_values.get(column, 0) + 1
+            for column in category_values:
+                value = row.get(column)
+                if value is not None and str(value).strip():
+                    raw_value = str(value)
+                    normalized_value = raw_value.strip().casefold()
+                    category_values[column].setdefault(normalized_value, set()).add(
+                        raw_value
+                    )
+
+    category_variants = {
+        column: {
+            normalized: sorted(values)
+            for normalized, values in groups.items()
+            if len(values) > 1
+        }
+        for column, groups in category_values.items()
+    }
 
     duplicate_count = (
         max(0, row_count - len({value for value in keys if all(value)}))
@@ -163,6 +184,7 @@ def evaluate_csv(
         "duplicate_count": duplicate_count,
         "missing_values": missing_values,
         "whitespace_values": whitespace_values,
+        "category_variants": category_variants,
         "status": status,
         "quarantined_count": quarantined_count,
     }
@@ -174,6 +196,7 @@ def evaluate_directory(
     quarantine_dir: str | Path | None = None,
     expected_columns: dict[str, Sequence[str]] | None = None,
     relationships: Sequence[tuple[str, str, str, str]] | None = None,
+    categorical_columns: dict[str, Sequence[str]] | None = None,
 ) -> dict[str, dict[str, object]]:
     """Apply the CSV quality gate to each configured table in a directory."""
     source_dir = Path(source_dir)
@@ -201,11 +224,17 @@ def evaluate_directory(
         table_expected_columns = (
             expected_columns.get(table_name) if expected_columns is not None else None
         )
+        table_categorical_columns = (
+            categorical_columns.get(table_name)
+            if categorical_columns is not None
+            else None
+        )
         reports[table_name] = evaluate_csv(
             path,
             key_column,
             table_quarantine,
             table_expected_columns,
+            table_categorical_columns,
         )
 
     if relationships is not None:

@@ -90,3 +90,25 @@ def test_evaluate_csv_detects_key_whitespace_and_quarantines_it(tmp_path):
     assert report["status"] == "fail"
     rows = list(csv.DictReader(quarantine_path.open(encoding="utf-8", newline="")))
     assert rows[0]["_dq_flags"] == "whitespace:order_id"
+
+
+def test_evaluate_csv_reports_case_variants_without_normalizing_values(tmp_path):
+    path = tmp_path / "products.csv"
+    path.write_text(
+        "product_id,product_category_name\n"
+        "prd-001,Electronics\n"
+        "prd-002,electronics\n"
+        "prd-003,Books\n",
+        encoding="utf-8",
+    )
+
+    report = evaluate_csv(
+        path,
+        "product_id",
+        categorical_columns=["product_category_name"],
+    )
+
+    assert report["category_variants"] == {
+        "product_category_name": {"electronics": ["Electronics", "electronics"]}
+    }
+    assert report["status"] == "pass"

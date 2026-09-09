@@ -31,7 +31,8 @@ Relationship checks:
 Run the quality scan across all nine source tables and write a structured report:
 
 Key whitespace violations are also counted and preserved in quarantine flags instead of
-being silently normalized.
+being silently normalized. Product category values are audited for case and whitespace
+variants; the report identifies candidate groups without auto-changing source values.
 ```powershell
 .\.venv\Scripts\python.exe .\scripts\check_quality.py .\data\source --output .\quality-report.json
 ```
