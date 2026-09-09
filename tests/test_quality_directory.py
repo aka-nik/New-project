@@ -38,3 +38,27 @@ def test_evaluate_directory_reports_each_table_status(tmp_path):
     assert reports["orders"]["quarantined_count"] == 2
     assert (tmp_path / "quarantine" / "orders.csv").exists()
     assert reports["customers"]["status"] == "pass"
+
+
+def test_evaluate_directory_fails_child_table_with_orphans(tmp_path):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "orders.csv").write_text(
+        "order_id\nord-001\n", encoding="utf-8"
+    )
+    (source_dir / "items.csv").write_text(
+        "order_id\nord-001\nmissing-order\n", encoding="utf-8"
+    )
+
+    reports = evaluate_directory(
+        source_dir,
+        {
+            "orders": ("orders.csv", "order_id"),
+            "items": ("items.csv", "order_id"),
+        },
+        relationships=[("items.csv", "order_id", "orders.csv", "order_id")],
+    )
+
+    relationship = "items.csv:order_id -> orders.csv:order_id"
+    assert reports["items"]["relationship_orphans"][relationship] == 1
+    assert reports["items"]["status"] == "fail"

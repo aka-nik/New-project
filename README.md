@@ -32,7 +32,8 @@ The quality library can write failed rows to a quarantine CSV while preserving t
 original source files. Bronze manifests include a source checksum, so rerunning the
 same source for the same ingest date reuses the existing output. Quality reports also
 include deterministic schema fingerprints and can fail a run when expected columns
-are missing or unexpected columns appear.
+are missing or unexpected columns appear. Directory-level checks can also validate
+configured foreign-key relationships and fail the child table when orphan rows exist.
 
 ## Important folders
 

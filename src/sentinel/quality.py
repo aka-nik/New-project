@@ -4,14 +4,41 @@ from __future__ import annotations
 
 import csv
 import hashlib
-from pathlib import Path
 from collections.abc import Sequence
+from pathlib import Path
 
 
 def schema_fingerprint(columns: Sequence[str]) -> str:
     """Return a stable fingerprint for an ordered CSV header."""
     payload = "\n".join(columns).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def evaluate_relationships(
+    source_dir: str | Path,
+    relationships: Sequence[tuple[str, str, str, str]],
+) -> dict[str, int]:
+    """Count child rows whose foreign key is absent from the parent table."""
+    source_dir = Path(source_dir)
+    results: dict[str, int] = {}
+    for child_file, child_column, parent_file, parent_column in relationships:
+        parent_path = source_dir / parent_file
+        child_path = source_dir / child_file
+        with parent_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            valid_keys = {
+                row[parent_column] for row in csv.DictReader(handle)
+            }
+        with child_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            orphan_count = sum(
+                1
+                for row in csv.DictReader(handle)
+                if row[child_column] not in valid_keys
+            )
+        relationship = (
+            f"{child_file}:{child_column} -> {parent_file}:{parent_column}"
+        )
+        results[relationship] = orphan_count
+    return results
 
 
 def evaluate_csv(
@@ -112,6 +139,7 @@ def evaluate_directory(
     table_specs: dict[str, tuple[str, str]],
     quarantine_dir: str | Path | None = None,
     expected_columns: dict[str, Sequence[str]] | None = None,
+    relationships: Sequence[tuple[str, str, str, str]] | None = None,
 ) -> dict[str, dict[str, object]]:
     """Apply the CSV quality gate to each configured table in a directory."""
     source_dir = Path(source_dir)
@@ -145,5 +173,22 @@ def evaluate_directory(
             table_quarantine,
             table_expected_columns,
         )
+
+    if relationships is not None:
+        table_names_by_file = {
+            filename: table_name
+            for table_name, (filename, _key_column) in table_specs.items()
+        }
+        relationship_results = evaluate_relationships(source_dir, relationships)
+        for relationship, orphan_count in relationship_results.items():
+            child_file = relationship.split(":", 1)[0]
+            child_table = table_names_by_file.get(child_file)
+            if child_table is None or child_table not in reports:
+                continue
+            report = reports[child_table]
+            orphan_reports = report.setdefault("relationship_orphans", {})
+            orphan_reports[relationship] = orphan_count
+            if orphan_count:
+                report["status"] = "fail"
 
     return reports
