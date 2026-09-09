@@ -28,6 +28,16 @@ Relationship checks:
 .\.venv\Scripts\python.exe .\scripts\check_relationships.py .\data\source
 ```
 
+Run the quality scan across all nine source tables and write a structured report:
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\check_quality.py .\data\source --output .\quality-report.json
+```
+
+The report uses composite keys for order items and payments, and treats the
+geolocation reference data as keyless because its source contract declares no
+unique row identity.
+
 The quality library can write failed rows to a quarantine CSV while preserving the
 original source files. Bronze manifests include a source checksum, so rerunning the
 same source for the same ingest date reuses the existing output. Quality reports also

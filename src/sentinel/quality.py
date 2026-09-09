@@ -7,6 +7,8 @@ import hashlib
 from collections.abc import Sequence
 from pathlib import Path
 
+KeyColumns = str | Sequence[str] | None
+
 
 def schema_fingerprint(columns: Sequence[str]) -> str:
     """Return a stable fingerprint for an ordered CSV header."""
@@ -43,7 +45,7 @@ def evaluate_relationships(
 
 def evaluate_csv(
     path: str | Path,
-    key_column: str,
+    key_column: KeyColumns,
     quarantine_path: str | Path | None = None,
     expected_columns: Sequence[str] | None = None,
 ) -> dict[str, object]:
@@ -52,24 +54,37 @@ def evaluate_csv(
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         fieldnames = reader.fieldnames or []
+        key_columns = (
+            [key_column]
+            if isinstance(key_column, str)
+            else list(key_column or [])
+        )
         row_count = 0
-        keys: list[str] = []
-        rows: list[dict[str, str]] = []
+        keys: list[tuple[str, ...]] = []
+        rows: list[dict[str, str | None]] = []
         missing_values: dict[str, int] = {}
 
         for row in reader:
             row_count += 1
             rows.append(row)
-            key_value = row.get(key_column, "")
-            keys.append(str(key_value) if key_value is not None else "")
+            keys.append(
+                tuple(
+                    str(row.get(column, "")) if row.get(column) is not None else ""
+                    for column in key_columns
+                )
+            )
             for column in fieldnames:
-                if column == key_column:
+                if column in key_columns:
                     continue
                 value = row.get(column, "")
                 if value is None or str(value).strip() == "":
                     missing_values[column] = missing_values.get(column, 0) + 1
 
-    duplicate_count = max(0, row_count - len({value for value in keys if value}))
+    duplicate_count = (
+        max(0, row_count - len({value for value in keys if all(value)}))
+        if key_columns
+        else 0
+    )
     expected = list(expected_columns) if expected_columns is not None else None
     missing_columns = [
         column for column in expected or [] if column not in fieldnames
@@ -90,17 +105,17 @@ def evaluate_csv(
     if quarantine_path is not None:
         quarantine_path = Path(quarantine_path)
         quarantine_path.parent.mkdir(parents=True, exist_ok=True)
-        key_counts: dict[str, int] = {}
+        key_counts: dict[tuple[str, ...], int] = {}
         for key in keys:
-            if key:
+            if all(key):
                 key_counts[key] = key_counts.get(key, 0) + 1
 
         quarantine_rows: list[dict[str, str]] = []
         for row, key in zip(rows, keys):
             flags: list[str] = []
-            if key and key_counts.get(key, 0) > 1:
+            if key_columns and all(key) and key_counts.get(key, 0) > 1:
                 flags.append("duplicate_key")
-            if not key:
+            if key_columns and not all(key):
                 flags.append("missing_key")
             missing_columns = [
                 column

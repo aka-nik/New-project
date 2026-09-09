@@ -58,3 +58,19 @@ def test_evaluate_csv_detects_schema_drift(tmp_path):
     assert report["schema_fingerprint"] == schema_fingerprint(
         ["order_id", "customer_id", "status"]
     )
+
+
+def test_evaluate_csv_supports_composite_keys(tmp_path):
+    path = tmp_path / "order_items.csv"
+    path.write_text(
+        "order_id,order_item_id,product_id\n"
+        "ord-001,1,prd-001\n"
+        "ord-001,2,prd-002\n"
+        "ord-001,2,prd-003\n",
+        encoding="utf-8",
+    )
+
+    report = evaluate_csv(path, ["order_id", "order_item_id"])
+
+    assert report["duplicate_count"] == 1
+    assert report["status"] == "fail"
