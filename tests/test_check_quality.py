@@ -21,7 +21,12 @@ def test_check_csv_counts_duplicate_keys_and_missing_values(tmp_path):
 def test_build_quality_report_covers_all_source_tables(tmp_path):
     source_file = tmp_path / "olist_orders_dataset.csv"
     source_file.write_text(
-        "order_id,order_status\norder-1,delivered\n", encoding="utf-8"
+        "order_id,customer_id,order_status,order_purchase_timestamp,"
+        "order_approved_at,order_delivered_carrier_date,"
+        "order_delivered_customer_date,order_estimated_delivery_date\n"
+        "order-1,customer-1,delivered,2018-01-01,2018-01-01,"
+        "2018-01-02,2018-01-03,2018-01-05\n",
+        encoding="utf-8",
     )
 
     reports = build_quality_report(tmp_path)

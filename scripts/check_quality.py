@@ -5,7 +5,7 @@ import csv
 import json
 from pathlib import Path
 
-from sentinel.quality import KeyColumns, evaluate_csv
+from sentinel.quality import KeyColumns, evaluate_directory
 
 
 TABLES = {
@@ -25,6 +25,88 @@ TABLES = {
         "product_category_name",
     ),
 }
+
+EXPECTED_COLUMNS = {
+    "orders": [
+        "order_id",
+        "customer_id",
+        "order_status",
+        "order_purchase_timestamp",
+        "order_approved_at",
+        "order_delivered_carrier_date",
+        "order_delivered_customer_date",
+        "order_estimated_delivery_date",
+    ],
+    "order_items": [
+        "order_id",
+        "order_item_id",
+        "product_id",
+        "seller_id",
+        "shipping_limit_date",
+        "price",
+        "freight_value",
+    ],
+    "customers": [
+        "customer_id",
+        "customer_unique_id",
+        "customer_zip_code_prefix",
+        "customer_city",
+        "customer_state",
+    ],
+    "products": [
+        "product_id",
+        "product_category_name",
+        "product_name_lenght",
+        "product_description_lenght",
+        "product_photos_qty",
+        "product_weight_g",
+        "product_length_cm",
+        "product_height_cm",
+        "product_width_cm",
+    ],
+    "payments": [
+        "order_id",
+        "payment_sequential",
+        "payment_type",
+        "payment_installments",
+        "payment_value",
+    ],
+    "reviews": [
+        "review_id",
+        "order_id",
+        "review_score",
+        "review_comment_title",
+        "review_comment_message",
+        "review_creation_date",
+        "review_answer_timestamp",
+    ],
+    "sellers": [
+        "seller_id",
+        "seller_zip_code_prefix",
+        "seller_city",
+        "seller_state",
+    ],
+    "geolocation": [
+        "geolocation_zip_code_prefix",
+        "geolocation_lat",
+        "geolocation_lng",
+        "geolocation_city",
+        "geolocation_state",
+    ],
+    "category_translation": [
+        "product_category_name",
+        "product_category_name_english",
+    ],
+}
+
+RELATIONSHIPS = [
+    ("olist_orders_dataset.csv", "customer_id", "olist_customers_dataset.csv", "customer_id"),
+    ("olist_order_items_dataset.csv", "order_id", "olist_orders_dataset.csv", "order_id"),
+    ("olist_order_items_dataset.csv", "product_id", "olist_products_dataset.csv", "product_id"),
+    ("olist_order_items_dataset.csv", "seller_id", "olist_sellers_dataset.csv", "seller_id"),
+    ("olist_order_reviews_dataset.csv", "order_id", "olist_orders_dataset.csv", "order_id"),
+    ("olist_order_payments_dataset.csv", "order_id", "olist_orders_dataset.csv", "order_id"),
+]
 
 
 def check_csv(path: Path, key_column: KeyColumns) -> tuple[int, int, dict[str, int]]:
@@ -46,26 +128,18 @@ def check_csv(path: Path, key_column: KeyColumns) -> tuple[int, int, dict[str, i
                 if not value.strip():
                     missing[column] += 1
 
-    duplicate_count = row_count - len(set(keys))
+    duplicate_count = row_count - len(set(keys)) if key_columns else 0
     return row_count, duplicate_count, missing
 
 
 def build_quality_report(source_dir: Path) -> dict[str, dict[str, object]]:
     """Evaluate every configured source table, including missing-file statuses."""
-    reports: dict[str, dict[str, object]] = {}
-    for table_name, (filename, key_column) in TABLES.items():
-        path = source_dir / filename
-        if path.exists():
-            reports[table_name] = evaluate_csv(path, key_column)
-        else:
-            reports[table_name] = {
-                "path": str(path),
-                "row_count": 0,
-                "duplicate_count": 0,
-                "missing_values": {},
-                "status": "missing",
-            }
-    return reports
+    return evaluate_directory(
+        source_dir,
+        TABLES,
+        expected_columns=EXPECTED_COLUMNS,
+        relationships=RELATIONSHIPS,
+    )
 
 
 def main() -> None:
@@ -94,6 +168,8 @@ def main() -> None:
         print(f"{table_name}: {report['row_count']:,} rows ({report['status']})")
         print(f"  duplicate {key_label}: {report['duplicate_count']:,}")
         print(f"  missing values: {missing_summary}")
+        for relationship, orphan_count in report.get("relationship_orphans", {}).items():
+            print(f"  {relationship}: {orphan_count:,} orphan rows")
 
     if arguments.output is not None:
         arguments.output.parent.mkdir(parents=True, exist_ok=True)

@@ -36,7 +36,8 @@ Run the quality scan across all nine source tables and write a structured report
 
 The report uses composite keys for order items and payments, and treats the
 geolocation reference data as keyless because its source contract declares no
-unique row identity.
+unique row identity. It also validates the expected columns and configured
+foreign-key relationships, reporting orphan counts in both console and JSON output.
 
 The quality library can write failed rows to a quarantine CSV while preserving the
 original source files. Bronze manifests include a source checksum, so rerunning the

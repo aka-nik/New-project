@@ -190,11 +190,19 @@ def evaluate_directory(
         )
 
     if relationships is not None:
+        available_relationships = [
+            relationship
+            for relationship in relationships
+            if (source_dir / relationship[0]).exists()
+            and (source_dir / relationship[2]).exists()
+        ]
         table_names_by_file = {
             filename: table_name
             for table_name, (filename, _key_column) in table_specs.items()
         }
-        relationship_results = evaluate_relationships(source_dir, relationships)
+        relationship_results = evaluate_relationships(
+            source_dir, available_relationships
+        )
         for relationship, orphan_count in relationship_results.items():
             child_file = relationship.split(":", 1)[0]
             child_table = table_names_by_file.get(child_file)
