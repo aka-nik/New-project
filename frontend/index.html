@@ -28,6 +28,9 @@
   </main><footer class="wrap"><div class="footer-line"><span>SentinelETL · Olist e-commerce data engineering project</span><span>Python · Parquet · SQLite · dbt · Airflow · Docker</span></div></footer>
 <script>
 const uploadSection=document.createElement('section');
+const uploadStyle=document.createElement('style');
+uploadStyle.textContent='@media(max-width:700px){#upload>div{grid-template-columns:1fr!important}}';
+document.head.append(uploadStyle);
 uploadSection.className='section wrap';
 uploadSection.id='upload';
 uploadSection.innerHTML='<span class="eyebrow">Interactive CSV preview</span><h2 style="margin-top:14px">Upload any CSV to inspect it instantly.</h2><div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;margin-top:34px;padding:30px;border:1px dashed #9db8a9;border-radius:14px;background:#f1f7f2"><div><h3 style="margin:0 0 6px;font-size:22px;letter-spacing:-.035em">Try a file in the browser</h3><p style="margin:0;color:#64736d">Choose any CSV to preview its columns and row count. It stays on your device and is never sent to this public website.</p></div><label class="button" for="csv-upload">Choose CSV file</label><input id="csv-upload" type="file" accept=".csv,text/csv" style="display:none"><div id="upload-result" aria-live="polite" style="display:none;grid-column:1 / -1;padding:14px;border-radius:8px;background:#dff1ed;color:#244f43;font-size:14px"></div></div>';
